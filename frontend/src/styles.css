@@ -274,6 +274,10 @@ body.dark-mode .answer-box {
   gap: 6px;
 }
 
+.study-controls.outside-controls {
+  margin-top: 10px;
+}
+
 .control-row {
   display: grid !important;
   width: 100%;

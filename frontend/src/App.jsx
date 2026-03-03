@@ -622,42 +622,44 @@ function StudyTab({ resources }) {
       </div>
 
       {card ? (
-        <div
-          className={`study-card gesture-surface ${reveal ? 'is-flipped' : ''}`}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-          onClick={onCardClick}
-        >
-          <header>
-            <span>{card.resource_title}</span>
-            <span>{card.chapter}</span>
-            <span>Q{card.question_number}</span>
-          </header>
-          <h3>{card.question_raw}</h3>
-          <ul>
-            {Object.entries(card.options).map(([k, v]) => (
-              <li key={k}><strong>{k}.</strong> {v.raw}</li>
-            ))}
-          </ul>
+        <>
+          <div
+            className={`study-card gesture-surface ${reveal ? 'is-flipped' : ''}`}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            onClick={onCardClick}
+          >
+            <header>
+              <span>{card.resource_title}</span>
+              <span>{card.chapter}</span>
+              <span>Q{card.question_number}</span>
+            </header>
+            <h3>{card.question_raw}</h3>
+            <ul>
+              {Object.entries(card.options).map(([k, v]) => (
+                <li key={k}><strong>{k}.</strong> {v.raw}</li>
+              ))}
+            </ul>
 
-          {reveal ? (
-            <div className="answer-box">
-              <p><strong>Answer:</strong> {card.answer_key} · {card.answer_text_raw}</p>
-              <p>{card.explanation_raw}</p>
-            </div>
-          ) : <p className="hint">Tap card to flip.</p>}
-          <div className="study-controls">
+            {reveal ? (
+              <div className="answer-box">
+                <p><strong>Answer:</strong> {card.answer_key} · {card.answer_text_raw}</p>
+                <p>{card.explanation_raw}</p>
+              </div>
+            ) : <p className="hint">Tap card to flip.</p>}
+          </div>
+          <div className="study-controls outside-controls">
             <div className="actions control-row arrows-row">
-              <button aria-label="Previous card" onClick={(e) => { e.stopPropagation(); handleSwipe('down') }}>←</button>
-              <button aria-label="Next card" onClick={(e) => { e.stopPropagation(); handleSwipe('up') }}>→</button>
+              <button aria-label="Previous card" onClick={() => handleSwipe('down')}>←</button>
+              <button aria-label="Next card" onClick={() => handleSwipe('up')}>→</button>
             </div>
             <div className="actions control-row action-row">
-              <button aria-label="Try again later" onClick={(e) => { e.stopPropagation(); handleSwipe('left') }}>☹️</button>
-              <button aria-label="Completed/correct" onClick={(e) => { e.stopPropagation(); handleSwipe('right') }}>😊</button>
-              <button onClick={(e) => { e.stopPropagation(); archiveCard() }}>Archive</button>
+              <button aria-label="Try again later" onClick={() => handleSwipe('left')}>☹️</button>
+              <button aria-label="Completed/correct" onClick={() => handleSwipe('right')}>😊</button>
+              <button onClick={archiveCard}>Archive</button>
             </div>
           </div>
-        </div>
+        </>
       ) : (
         <p>{message || 'Select a deck to start.'}</p>
       )}
