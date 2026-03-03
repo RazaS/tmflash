@@ -372,7 +372,6 @@ function DraftReviewTab({ resources }) {
 
 function StudyTab({ resources }) {
   const [resourceId, setResourceId] = useState('')
-  const [chapter, setChapter] = useState('')
   const [session, setSession] = useState({ cards: [], index: -1 })
   const [flippedIds, setFlippedIds] = useState([])
   const [retryCount, setRetryCount] = useState(0)
@@ -395,15 +394,36 @@ function StudyTab({ resources }) {
     })
   }
 
-  async function fetchApiNext() {
+  function resetStudySession() {
+    retryQueueRef.current = []
+    setRetryCount(0)
+    setFlippedIds([])
+    setSession({ cards: [], index: -1 })
+  }
+
+  async function fetchApiNext(resourceOverride = null) {
     const q = new URLSearchParams()
-    if (resourceId) q.set('resource_id', resourceId)
-    if (chapter) q.set('chapter', chapter)
+    const selectedResource = resourceOverride !== null ? resourceOverride : resourceId
+    if (!selectedResource) {
+      return { ok: false, message: 'Select a deck first.' }
+    }
+    if (selectedResource) q.set('resource_id', selectedResource)
     const data = await api(`/api/study/next?${q.toString()}`)
     if (!data.ok) {
       return { ok: false, message: data.message || 'No cards available.' }
     }
     return { ok: true, card: data.card }
+  }
+
+  async function startDeck(resourceOverride) {
+    resetStudySession()
+    const data = await fetchApiNext(resourceOverride)
+    if (!data.ok) {
+      setMessage(data.message || 'No cards available.')
+      return
+    }
+    appendCardToSession(data.card)
+    setMessage('')
   }
 
   async function loadBrandNewCard() {
@@ -575,19 +595,30 @@ function StudyTab({ resources }) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [card, session.index, session.cards.length, resourceId, chapter])
+  }, [card, session.index, session.cards.length, resourceId])
 
   return (
     <section className={`panel study-panel ${compactStudy ? 'study-panel-compact' : ''}`}>
       <h2>Study Deck</h2>
       <div className="toolbar">
-        <select value={resourceId} onChange={(e) => setResourceId(e.target.value)}>
-          <option value="">All resources</option>
+        <select
+          value={resourceId}
+          onChange={(e) => {
+            const nextResourceId = e.target.value
+            setResourceId(nextResourceId)
+            if (nextResourceId) {
+              startDeck(nextResourceId)
+            } else {
+              resetStudySession()
+              setMessage('Select a deck to start.')
+            }
+          }}
+        >
+          <option value="">Select deck</option>
           {resources.map((r) => (
             <option key={r.id} value={r.id}>{r.title}</option>
           ))}
         </select>
-        <input value={chapter} onChange={(e) => setChapter(e.target.value)} placeholder="Chapter filter (exact)" />
       </div>
 
       {card ? (
@@ -630,7 +661,7 @@ function StudyTab({ resources }) {
           </div>
         </div>
       ) : (
-        <p>{message || 'Swipe up to start.'}</p>
+        <p>{message || 'Select a deck to start.'}</p>
       )}
       <p className="hint">
         Swipes: left = try later, right = pass, up = next, down = previous. Tap/click to flip.
