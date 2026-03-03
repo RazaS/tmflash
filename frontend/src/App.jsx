@@ -462,6 +462,15 @@ function StudyTab({ resources }) {
     setMessage('')
   }
 
+  function goForwardHistoryOnly() {
+    if (session.index < session.cards.length - 1) {
+      setSession((prev) => ({ ...prev, index: prev.index + 1 }))
+      setMessage('')
+      return
+    }
+    setMessage('No later card in this session yet.')
+  }
+
   function toggleFlip() {
     if (!card) return
     setFlippedIds((prev) =>
@@ -650,8 +659,8 @@ function StudyTab({ resources }) {
           </div>
           <div className="study-controls outside-controls">
             <div className="actions control-row arrows-row">
-              <button aria-label="Previous card" onClick={() => handleSwipe('down')}>←</button>
-              <button aria-label="Next card" onClick={() => handleSwipe('up')}>→</button>
+              <button aria-label="Previous seen card" onClick={goPrevious}>←</button>
+              <button aria-label="Next seen card" onClick={goForwardHistoryOnly}>→</button>
             </div>
             <div className="actions control-row action-row">
               <button aria-label="Try again later" onClick={() => handleSwipe('left')}>☹️</button>
@@ -664,10 +673,10 @@ function StudyTab({ resources }) {
         <p>{message || 'Select a deck to start.'}</p>
       )}
       <p className="hint">
-        Swipes: left = try later, right = pass, up = next, down = previous. Tap/click to flip.
+        Swipes: left = try later + next, right = pass + next, up = next card, down = previous card. Tap/click to flip.
       </p>
       <p className="hint">
-        While flipped: up/down swipes are disabled for scrolling; left/right still work. Retry queue: {retryCount}
+        Arrow buttons browse only your seen-card history. While flipped: up/down swipes are disabled for scrolling; left/right still work. Retry queue: {retryCount}
       </p>
     </section>
   )
