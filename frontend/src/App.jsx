@@ -651,11 +651,9 @@ function StudyTab({ resources }) {
               <button aria-label="Previous card" onClick={(e) => { e.stopPropagation(); handleSwipe('down') }}>←</button>
               <button aria-label="Next card" onClick={(e) => { e.stopPropagation(); handleSwipe('up') }}>→</button>
             </div>
-            <div className="actions control-row mood-row">
+            <div className="actions control-row action-row">
               <button aria-label="Try again later" onClick={(e) => { e.stopPropagation(); handleSwipe('left') }}>☹️</button>
               <button aria-label="Completed/correct" onClick={(e) => { e.stopPropagation(); handleSwipe('right') }}>😊</button>
-            </div>
-            <div className="actions control-row archive-row">
               <button onClick={(e) => { e.stopPropagation(); archiveCard() }}>Archive</button>
             </div>
           </div>

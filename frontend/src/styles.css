@@ -275,20 +275,28 @@ body.dark-mode .answer-box {
 }
 
 .control-row {
-  justify-content: center;
+  display: grid !important;
+  width: 100%;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .control-row button {
-  min-width: 64px;
+  width: 100%;
+  min-width: 0;
+}
+
+.arrows-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.action-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .arrows-row button,
-.mood-row button {
+.action-row button {
   font-size: 1.05rem;
-}
-
-.archive-row button {
-  min-width: 110px;
 }
 
 .answer-box {
@@ -466,13 +474,8 @@ body.dark-mode .answer-box {
   }
 
   .study-panel-compact .arrows-row button,
-  .study-panel-compact .mood-row button {
-    min-width: 52px;
+  .study-panel-compact .action-row button {
     font-size: 0.92rem;
-  }
-
-  .study-panel-compact .archive-row button {
-    min-width: 96px;
   }
 
   .study-panel .hint {
