@@ -244,6 +244,10 @@ body.dark-mode .answer-box {
   user-select: none;
 }
 
+.gesture-surface.is-flipped {
+  touch-action: pan-y;
+}
+
 .study-card header {
   display: flex;
   gap: 10px;
@@ -262,6 +266,29 @@ body.dark-mode .answer-box {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.study-controls {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.control-row {
+  justify-content: center;
+}
+
+.control-row button {
+  min-width: 64px;
+}
+
+.arrows-row button,
+.mood-row button {
+  font-size: 1.05rem;
+}
+
+.archive-row button {
+  min-width: 110px;
 }
 
 .answer-box {
@@ -436,6 +463,16 @@ body.dark-mode .answer-box {
   .study-panel-compact .actions button {
     padding: 6px 8px;
     font-size: 0.82rem;
+  }
+
+  .study-panel-compact .arrows-row button,
+  .study-panel-compact .mood-row button {
+    min-width: 52px;
+    font-size: 0.92rem;
+  }
+
+  .study-panel-compact .archive-row button {
+    min-width: 96px;
   }
 
   .study-panel .hint {

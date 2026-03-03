@@ -528,6 +528,9 @@ function StudyTab({ resources }) {
     }
 
     if (absY > threshold) {
+      if (reveal) {
+        return
+      }
       ignoreNextClickRef.current = true
       handleSwipe(dy > 0 ? 'down' : 'up')
     }
@@ -585,11 +588,15 @@ function StudyTab({ resources }) {
           ))}
         </select>
         <input value={chapter} onChange={(e) => setChapter(e.target.value)} placeholder="Chapter filter (exact)" />
-        <button onClick={goNext}>Next Card</button>
       </div>
 
       {card ? (
-        <div className="study-card gesture-surface" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onClick={onCardClick}>
+        <div
+          className={`study-card gesture-surface ${reveal ? 'is-flipped' : ''}`}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          onClick={onCardClick}
+        >
           <header>
             <span>{card.resource_title}</span>
             <span>{card.chapter}</span>
@@ -608,22 +615,28 @@ function StudyTab({ resources }) {
               <p>{card.explanation_raw}</p>
             </div>
           ) : <p className="hint">Tap card to flip.</p>}
-          <div className="actions">
-            <button onClick={(e) => { e.stopPropagation(); handleSwipe('down') }}>Previous</button>
-            <button onClick={(e) => { e.stopPropagation(); handleSwipe('up') }}>Next</button>
-            <button onClick={(e) => { e.stopPropagation(); handleSwipe('left') }}>Try Again Later</button>
-            <button onClick={(e) => { e.stopPropagation(); handleSwipe('right') }}>Pass</button>
-            <button onClick={(e) => { e.stopPropagation(); archiveCard() }}>Archive</button>
+          <div className="study-controls">
+            <div className="actions control-row arrows-row">
+              <button aria-label="Previous card" onClick={(e) => { e.stopPropagation(); handleSwipe('down') }}>←</button>
+              <button aria-label="Next card" onClick={(e) => { e.stopPropagation(); handleSwipe('up') }}>→</button>
+            </div>
+            <div className="actions control-row mood-row">
+              <button aria-label="Try again later" onClick={(e) => { e.stopPropagation(); handleSwipe('left') }}>☹️</button>
+              <button aria-label="Completed/correct" onClick={(e) => { e.stopPropagation(); handleSwipe('right') }}>😊</button>
+            </div>
+            <div className="actions control-row archive-row">
+              <button onClick={(e) => { e.stopPropagation(); archiveCard() }}>Archive</button>
+            </div>
           </div>
         </div>
       ) : (
-        <p>{message || 'Swipe up or press Next Card to start.'}</p>
+        <p>{message || 'Swipe up to start.'}</p>
       )}
       <p className="hint">
         Swipes: left = try later, right = pass, up = next, down = previous. Tap/click to flip.
       </p>
       <p className="hint">
-        Keyboard: Left/Right/Up/Down arrows for actions, Space/Enter to flip. Retry queue: {retryCount}
+        While flipped: up/down swipes are disabled for scrolling; left/right still work. Retry queue: {retryCount}
       </p>
     </section>
   )
