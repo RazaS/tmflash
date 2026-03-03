@@ -728,8 +728,8 @@ export default function App() {
   if (!me.authenticated) {
     return (
       <main className="app-shell">
-        <button className="theme-toggle" onClick={toggleTheme}>
-          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        <button className="theme-toggle standalone" onClick={toggleTheme} aria-label="Toggle dark mode" title="Toggle dark mode">
+          {theme === 'dark' ? '☀️' : '🌙'}
         </button>
         <AuthPanel onAuth={loadMe} />
       </main>
@@ -738,12 +738,12 @@ export default function App() {
 
   return (
     <main className={`app-shell ${activeTab === 'Study' ? 'study-mode' : ''}`}>
-      <button className="theme-toggle" onClick={toggleTheme}>
-        {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-      </button>
       <header className="topbar">
         <h1>Flashcard Studio</h1>
-        <div>
+        <div className="topbar-actions">
+          <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle dark mode" title="Toggle dark mode">
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
           <span>{me.username}</span>
           <button onClick={logout}>Log out</button>
         </div>

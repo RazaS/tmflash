@@ -64,6 +64,16 @@ body.dark-mode {
   margin-left: 12px;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-actions button {
+  margin-left: 0;
+}
+
 .tabbar {
   display: flex;
   gap: 8px;
@@ -288,13 +298,22 @@ body.dark-mode .answer-box {
 }
 
 .theme-toggle {
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.theme-toggle.standalone {
   position: fixed;
   top: 12px;
   right: 12px;
   z-index: 1000;
-  border-radius: 999px;
-  padding: 7px 11px;
-  font-size: 0.84rem;
 }
 
 .hint {
@@ -317,10 +336,31 @@ body.dark-mode .answer-box {
     font-size: 1.2rem;
   }
 
-  .theme-toggle {
+  .theme-toggle.standalone {
     top: 8px;
     right: 8px;
-    padding: 6px 9px;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  .topbar-actions span {
+    max-width: 108px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.86rem;
+  }
+
+  .topbar-actions .theme-toggle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  .topbar-actions button:not(.theme-toggle) {
+    padding: 5px 8px;
     font-size: 0.78rem;
   }
 
