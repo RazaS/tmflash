@@ -10,6 +10,16 @@
   --line: #d7ddd6;
 }
 
+body.dark-mode {
+  --bg: #0f1518;
+  --panel: #162026;
+  --ink: #e8f0f2;
+  --muted: #a8bcc3;
+  --accent: #2ca0ad;
+  --accent-2: #f09a67;
+  --line: #2d3d44;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -23,6 +33,13 @@ body {
     radial-gradient(circle at 86% 0%, #d5efe8 0 16%, transparent 17%),
     var(--bg);
   min-height: 100vh;
+}
+
+body.dark-mode {
+  background:
+    radial-gradient(circle at 12% 10%, #2a2220 0 18%, transparent 19%),
+    radial-gradient(circle at 86% 0%, #173036 0 16%, transparent 17%),
+    var(--bg);
 }
 
 .app-shell {
@@ -112,6 +129,13 @@ textarea {
   background: #fff;
 }
 
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background: #10191e;
+  color: var(--ink);
+}
+
 textarea {
   min-height: 90px;
 }
@@ -161,6 +185,15 @@ button:hover {
   gap: 4px;
   background: white;
   color: var(--ink);
+}
+
+body.dark-mode .list-item,
+body.dark-mode .card-mini,
+body.dark-mode .study-card,
+body.dark-mode .metrics article,
+body.dark-mode .job pre,
+body.dark-mode .answer-box {
+  background: #10191e;
 }
 
 .toolbar {
@@ -254,6 +287,16 @@ button:hover {
   color: #a72626;
 }
 
+.theme-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 0.84rem;
+}
+
 .hint {
   color: var(--muted);
   font-size: 0.9rem;
@@ -266,11 +309,19 @@ button:hover {
   }
 
   .study-mode .topbar {
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    margin-top: 34px;
   }
 
   .study-mode .topbar h1 {
     font-size: 1.2rem;
+  }
+
+  .theme-toggle {
+    top: 8px;
+    right: 8px;
+    padding: 6px 9px;
+    font-size: 0.78rem;
   }
 
   .study-mode .topbar button {

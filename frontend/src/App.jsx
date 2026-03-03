@@ -679,6 +679,24 @@ export default function App() {
   const [me, setMe] = useState({ authenticated: false, username: '' })
   const [activeTab, setActiveTab] = useState('Study')
   const [resources, setResources] = useState([])
+  const [theme, setTheme] = useState('light')
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem('theme')
+    if (stored === 'dark' || stored === 'light') {
+      setTheme(stored)
+      return
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark')
+    }
+  }, [])
+
+  useEffect(() => {
+    const isDark = theme === 'dark'
+    document.body.classList.toggle('dark-mode', isDark)
+    window.localStorage.setItem('theme', theme)
+  }, [theme])
 
   async function loadMe() {
     const data = await api('/api/me')
@@ -703,9 +721,16 @@ export default function App() {
     setMe({ authenticated: false, username: '' })
   }
 
+  function toggleTheme() {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
+  }
+
   if (!me.authenticated) {
     return (
       <main className="app-shell">
+        <button className="theme-toggle" onClick={toggleTheme}>
+          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </button>
         <AuthPanel onAuth={loadMe} />
       </main>
     )
@@ -713,6 +738,9 @@ export default function App() {
 
   return (
     <main className={`app-shell ${activeTab === 'Study' ? 'study-mode' : ''}`}>
+      <button className="theme-toggle" onClick={toggleTheme}>
+        {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+      </button>
       <header className="topbar">
         <h1>Flashcard Studio</h1>
         <div>
