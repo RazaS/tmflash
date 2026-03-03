@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 const TABS = ['Study', 'Resources', 'Import', 'Draft Review', 'Progress']
 
@@ -373,51 +373,205 @@ function DraftReviewTab({ resources }) {
 function StudyTab({ resources }) {
   const [resourceId, setResourceId] = useState('')
   const [chapter, setChapter] = useState('')
-  const [card, setCard] = useState(null)
-  const [reveal, setReveal] = useState(false)
+  const [session, setSession] = useState({ cards: [], index: -1 })
+  const [flippedIds, setFlippedIds] = useState([])
+  const [retryCount, setRetryCount] = useState(0)
   const [message, setMessage] = useState('')
+  const retryQueueRef = useRef([])
+  const touchStartRef = useRef(null)
+  const ignoreNextClickRef = useRef(false)
 
-  async function loadNext() {
+  const card = session.cards[session.index] || null
+  const reveal = card ? flippedIds.includes(card.id) : false
+
+  function appendCardToSession(nextCard) {
+    setSession((prev) => {
+      const kept = prev.cards.slice(0, prev.index + 1)
+      return {
+        cards: [...kept, nextCard],
+        index: kept.length
+      }
+    })
+  }
+
+  async function fetchApiNext() {
     const q = new URLSearchParams()
     if (resourceId) q.set('resource_id', resourceId)
     if (chapter) q.set('chapter', chapter)
     const data = await api(`/api/study/next?${q.toString()}`)
     if (!data.ok) {
-      setMessage(data.message || 'No cards available.')
-      setCard(null)
+      return { ok: false, message: data.message || 'No cards available.' }
+    }
+    return { ok: true, card: data.card }
+  }
+
+  async function loadBrandNewCard() {
+    if (retryQueueRef.current.length > 0) {
+      const retryCard = retryQueueRef.current.shift()
+      setRetryCount(retryQueueRef.current.length)
+      appendCardToSession(retryCard)
+      setMessage('Loaded a card from your try-again-later queue.')
       return
     }
-    setCard(data.card)
-    setReveal(false)
+
+    const data = await fetchApiNext()
+    if (!data.ok) {
+      if (!card) setMessage(data.message)
+      return
+    }
+    appendCardToSession(data.card)
     setMessage('')
   }
 
-  async function grade(result) {
+  async function goNext() {
+    if (session.index < session.cards.length - 1) {
+      setSession((prev) => ({ ...prev, index: prev.index + 1 }))
+      setMessage('')
+      return
+    }
+    await loadBrandNewCard()
+  }
+
+  function goPrevious() {
+    if (session.index <= 0) {
+      setMessage('No previous card in this session yet.')
+      return
+    }
+    setSession((prev) => ({ ...prev, index: prev.index - 1 }))
+    setMessage('')
+  }
+
+  function toggleFlip() {
     if (!card) return
-    await api('/api/study/grade', {
+    setFlippedIds((prev) =>
+      prev.includes(card.id) ? prev.filter((id) => id !== card.id) : [...prev, card.id]
+    )
+  }
+
+  async function passCard() {
+    if (!card) return
+    const result = await api('/api/study/grade', {
       method: 'POST',
-      body: JSON.stringify({ card_id: card.id, result })
+      body: JSON.stringify({ card_id: card.id, result: 'correct' })
     })
-    loadNext()
+    if (!result.ok) {
+      setMessage(result.message || 'Failed to mark card as passed.')
+      return
+    }
+    await goNext()
+  }
+
+  async function tryAgainLater() {
+    if (!card) return
+    retryQueueRef.current.push(card)
+    setRetryCount(retryQueueRef.current.length)
+    await goNext()
   }
 
   async function archiveCard() {
     if (!card) return
-    await api(`/api/cards/${card.id}/archive`, { method: 'POST' })
-    loadNext()
+    const result = await api(`/api/cards/${card.id}/archive`, { method: 'POST' })
+    if (!result.ok) {
+      setMessage(result.message || 'Failed to archive card.')
+      return
+    }
+    await goNext()
+  }
+
+  async function handleSwipe(direction) {
+    if (!card && direction !== 'up') return
+    if (direction === 'left') {
+      await tryAgainLater()
+      return
+    }
+    if (direction === 'right') {
+      await passCard()
+      return
+    }
+    if (direction === 'up') {
+      await goNext()
+      return
+    }
+    if (direction === 'down') {
+      goPrevious()
+    }
+  }
+
+  function onTouchStart(e) {
+    const t = e.changedTouches?.[0]
+    if (!t) return
+    touchStartRef.current = { x: t.clientX, y: t.clientY }
+  }
+
+  function onTouchEnd(e) {
+    const start = touchStartRef.current
+    touchStartRef.current = null
+    const t = e.changedTouches?.[0]
+    if (!start || !t) return
+    const dx = t.clientX - start.x
+    const dy = t.clientY - start.y
+    const absX = Math.abs(dx)
+    const absY = Math.abs(dy)
+    const threshold = 45
+
+    if (absX < 10 && absY < 10) {
+      toggleFlip()
+      ignoreNextClickRef.current = true
+      return
+    }
+
+    if (absX > absY && absX > threshold) {
+      ignoreNextClickRef.current = true
+      handleSwipe(dx > 0 ? 'right' : 'left')
+      return
+    }
+
+    if (absY > threshold) {
+      ignoreNextClickRef.current = true
+      handleSwipe(dy > 0 ? 'down' : 'up')
+    }
+  }
+
+  function onCardClick() {
+    if (ignoreNextClickRef.current) {
+      ignoreNextClickRef.current = false
+      return
+    }
+    toggleFlip()
   }
 
   useEffect(() => {
     function onKey(e) {
-      if (!card) return
-      if (e.key === 'r') setReveal((x) => !x)
-      if (e.key === 'n') loadNext()
-      if (e.key === 'c' && reveal) grade('correct')
-      if (e.key === 'i' && reveal) grade('incorrect')
+      const tag = String(e.target?.tagName || '').toLowerCase()
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        handleSwipe('left')
+        return
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        handleSwipe('right')
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        handleSwipe('up')
+        return
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        handleSwipe('down')
+        return
+      }
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault()
+        toggleFlip()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [card, reveal])
+  }, [card, session.index, session.cards.length, resourceId, chapter])
 
   return (
     <section className="panel">
@@ -430,11 +584,11 @@ function StudyTab({ resources }) {
           ))}
         </select>
         <input value={chapter} onChange={(e) => setChapter(e.target.value)} placeholder="Chapter filter (exact)" />
-        <button onClick={loadNext}>Next Card (N)</button>
+        <button onClick={goNext}>Next Card</button>
       </div>
 
       {card ? (
-        <div className="study-card">
+        <div className="study-card gesture-surface" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onClick={onCardClick}>
           <header>
             <span>{card.resource_title}</span>
             <span>{card.chapter}</span>
@@ -446,26 +600,30 @@ function StudyTab({ resources }) {
               <li key={k}><strong>{k}.</strong> {v.raw}</li>
             ))}
           </ul>
-          <div className="actions">
-            <button onClick={() => setReveal((x) => !x)}>Reveal (R)</button>
-            <button onClick={archiveCard}>Archive</button>
-          </div>
 
           {reveal ? (
             <div className="answer-box">
               <p><strong>Answer:</strong> {card.answer_key} · {card.answer_text_raw}</p>
               <p>{card.explanation_raw}</p>
-              <div className="actions">
-                <button onClick={() => grade('correct')}>Correct (C)</button>
-                <button onClick={() => grade('incorrect')}>Incorrect (I)</button>
-              </div>
             </div>
-          ) : null}
+          ) : <p className="hint">Tap card to flip.</p>}
+          <div className="actions">
+            <button onClick={(e) => { e.stopPropagation(); handleSwipe('down') }}>Previous</button>
+            <button onClick={(e) => { e.stopPropagation(); handleSwipe('up') }}>Next</button>
+            <button onClick={(e) => { e.stopPropagation(); handleSwipe('left') }}>Try Again Later</button>
+            <button onClick={(e) => { e.stopPropagation(); handleSwipe('right') }}>Pass</button>
+            <button onClick={(e) => { e.stopPropagation(); archiveCard() }}>Archive</button>
+          </div>
         </div>
       ) : (
-        <p>{message || 'Press Next Card to start.'}</p>
+        <p>{message || 'Swipe up or press Next Card to start.'}</p>
       )}
-      <p className="hint">Keyboard: R reveal, C correct, I incorrect, N next.</p>
+      <p className="hint">
+        Swipes: left = try later, right = pass, up = next, down = previous. Tap/click to flip.
+      </p>
+      <p className="hint">
+        Keyboard: Left/Right/Up/Down arrows for actions, Space/Enter to flip. Retry queue: {retryCount}
+      </p>
     </section>
   )
 }

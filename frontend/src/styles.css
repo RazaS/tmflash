@@ -194,6 +194,11 @@ button:hover {
   padding: 16px;
 }
 
+.gesture-surface {
+  touch-action: none;
+  user-select: none;
+}
+
 .study-card header {
   display: flex;
   gap: 10px;
