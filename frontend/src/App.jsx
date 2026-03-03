@@ -383,6 +383,7 @@ function StudyTab({ resources }) {
 
   const card = session.cards[session.index] || null
   const reveal = card ? flippedIds.includes(card.id) : false
+  const compactStudy = Boolean(card) || Boolean(resourceId)
 
   function appendCardToSession(nextCard) {
     setSession((prev) => {
@@ -574,7 +575,7 @@ function StudyTab({ resources }) {
   }, [card, session.index, session.cards.length, resourceId, chapter])
 
   return (
-    <section className="panel">
+    <section className={`panel study-panel ${compactStudy ? 'study-panel-compact' : ''}`}>
       <h2>Study Deck</h2>
       <div className="toolbar">
         <select value={resourceId} onChange={(e) => setResourceId(e.target.value)}>
@@ -711,7 +712,7 @@ export default function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell ${activeTab === 'Study' ? 'study-mode' : ''}`}>
       <header className="topbar">
         <h1>Flashcard Studio</h1>
         <div>

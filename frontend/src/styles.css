@@ -40,6 +40,7 @@ body {
 .topbar h1 {
   margin: 0;
   letter-spacing: 0.02em;
+  font-size: 1.7rem;
 }
 
 .topbar button {
@@ -58,6 +59,7 @@ body {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 8px 14px;
+  font-size: 0.95rem;
   cursor: pointer;
 }
 
@@ -203,11 +205,14 @@ button:hover {
   display: flex;
   gap: 10px;
   color: var(--muted);
+  font-size: 0.9rem;
   flex-wrap: wrap;
 }
 
 .study-card ul {
   padding-left: 18px;
+  margin: 10px 0;
+  font-size: 0.95rem;
 }
 
 .actions {
@@ -258,5 +263,92 @@ button:hover {
   .two-col,
   .metrics {
     grid-template-columns: 1fr;
+  }
+
+  .study-mode .topbar {
+    margin-bottom: 6px;
+  }
+
+  .study-mode .topbar h1 {
+    font-size: 1.2rem;
+  }
+
+  .study-mode .topbar button {
+    padding: 6px 9px;
+    font-size: 0.82rem;
+  }
+
+  .study-mode .tabbar {
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+
+  .study-mode .tabbar button {
+    padding: 5px 9px;
+    font-size: 0.8rem;
+  }
+
+  .study-panel h2 {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+  }
+
+  .study-panel .toolbar {
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+
+  .study-panel .toolbar > * {
+    flex: 1 1 120px;
+  }
+
+  .study-panel input,
+  .study-panel select,
+  .study-panel button {
+    font-size: 0.86rem;
+    padding: 6px 8px;
+  }
+
+  .study-panel-compact {
+    padding: 12px;
+  }
+
+  .study-panel-compact .study-card {
+    padding: 11px;
+  }
+
+  .study-panel-compact .study-card h3 {
+    font-size: 1rem;
+    margin: 7px 0 8px;
+    line-height: 1.3;
+  }
+
+  .study-panel-compact .study-card ul {
+    font-size: 0.88rem;
+    margin: 6px 0;
+  }
+
+  .study-panel-compact .study-card header {
+    font-size: 0.8rem;
+    gap: 6px;
+  }
+
+  .study-panel-compact .answer-box {
+    padding: 8px;
+    font-size: 0.88rem;
+  }
+
+  .study-panel-compact .actions {
+    gap: 6px;
+  }
+
+  .study-panel-compact .actions button {
+    padding: 6px 8px;
+    font-size: 0.82rem;
+  }
+
+  .study-panel .hint {
+    font-size: 0.8rem;
+    margin: 6px 0 0;
   }
 }
