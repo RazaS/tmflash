@@ -371,6 +371,7 @@ function DraftReviewTab({ resources }) {
 }
 
 function StudyTab({ resources }) {
+  const RETRY_DELAY_CARDS = 2
   const [resourceId, setResourceId] = useState('')
   const [session, setSession] = useState({ cards: [], index: -1 })
   const [flippedIds, setFlippedIds] = useState([])
@@ -401,6 +402,29 @@ function StudyTab({ resources }) {
     setSession({ cards: [], index: -1 })
   }
 
+  function scheduleRetryCard(nextCard) {
+    const dueAt = session.cards.length + RETRY_DELAY_CARDS
+    const existingIndex = retryQueueRef.current.findIndex((entry) => entry.card.id === nextCard.id)
+    if (existingIndex >= 0) {
+      retryQueueRef.current.splice(existingIndex, 1)
+    }
+    retryQueueRef.current.push({ card: nextCard, dueAt })
+    retryQueueRef.current.sort((a, b) => a.dueAt - b.dueAt)
+    setRetryCount(retryQueueRef.current.length)
+  }
+
+  function dequeueRetryCard(force = false) {
+    if (retryQueueRef.current.length === 0) return null
+    const sessionDepth = session.cards.length
+    const index = force
+      ? 0
+      : retryQueueRef.current.findIndex((entry) => entry.dueAt <= sessionDepth)
+    if (index < 0) return null
+    const [entry] = retryQueueRef.current.splice(index, 1)
+    setRetryCount(retryQueueRef.current.length)
+    return entry.card
+  }
+
   async function fetchApiNext(resourceOverride = null) {
     const q = new URLSearchParams()
     const selectedResource = resourceOverride !== null ? resourceOverride : resourceId
@@ -427,9 +451,8 @@ function StudyTab({ resources }) {
   }
 
   async function loadBrandNewCard() {
-    if (retryQueueRef.current.length > 0) {
-      const retryCard = retryQueueRef.current.shift()
-      setRetryCount(retryQueueRef.current.length)
+    const retryCard = dequeueRetryCard(false)
+    if (retryCard) {
       appendCardToSession(retryCard)
       setMessage('Loaded a card from your try-again-later queue.')
       return
@@ -437,6 +460,12 @@ function StudyTab({ resources }) {
 
     const data = await fetchApiNext()
     if (!data.ok) {
+      const fallbackRetryCard = dequeueRetryCard(true)
+      if (fallbackRetryCard) {
+        appendCardToSession(fallbackRetryCard)
+        setMessage('No new cards left, showing a try-again-later card.')
+        return
+      }
       if (!card) setMessage(data.message)
       return
     }
@@ -493,8 +522,7 @@ function StudyTab({ resources }) {
 
   async function tryAgainLater() {
     if (!card) return
-    retryQueueRef.current.push(card)
-    setRetryCount(retryQueueRef.current.length)
+    scheduleRetryCard(card)
     await goNext()
   }
 
@@ -676,7 +704,7 @@ function StudyTab({ resources }) {
         Swipes: left = try later + next, right = pass + next, up = next card, down = previous card. Tap/click to flip.
       </p>
       <p className="hint">
-        Arrow buttons browse only your seen-card history. While flipped: up/down swipes are disabled for scrolling; left/right still work. Retry queue: {retryCount}
+        Arrow buttons browse only your seen-card history. Try-later cards reappear after a short delay. While flipped: up/down swipes are disabled for scrolling; left/right still work. Retry queue: {retryCount}
       </p>
     </section>
   )
